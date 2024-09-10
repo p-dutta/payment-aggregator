@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+    container_name: payment_app
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://payment_db/payment
+      - SPRING_DATASOURCE_USERNAME=payment
+      - SPRING_DATASOURCE_PASSWORD=payment
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+    ports:
+      - "8080:8080"
+    depends_on:
+      - payment_db
+      - redis
+    restart: on-failure
+    networks:
+      - my_network
+
+  payment_db:
+    image: 'postgres:alpine'
+    container_name: payment_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=payment
+      - POSTGRES_USER=payment
+      - POSTGRES_PASSWORD=payment
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data-dump/payment:/var/lib/postgresql/data
+    networks:
+      - my_network
+
+  redis:
+    image: 'redis:latest'
+    container_name: payment_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
